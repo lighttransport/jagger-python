@@ -11,3 +11,5 @@ line-length = 140
 
 [project]
 name = "jagger"
+version = "0.1.0"
+

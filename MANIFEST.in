@@ -1,0 +1,15 @@
+include ccedar_core.h
+include pyproject.toml
+include setup.py
+include README.md
+include LICENSE
+include jagger.BSD
+include jagger.GPL
+include jagger.LGPL
+include jagger.cc
+include jagger.h
+include python-binding-jagger.cc
+include python-binding-train-jagger.cc
+include train/train_jagger.cc
+include train/CMakeLists.txt
+include train/README.md
