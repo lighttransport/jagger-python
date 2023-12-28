@@ -13,3 +13,6 @@ line-length = 140
 name = "jagger"
 version = "0.1.0"
 
+
+[project.scripts]
+jagger = "jagger:main"

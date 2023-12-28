@@ -7,7 +7,7 @@ jagger_compile_args=[
   ]
 
 ext_modules = [
-    Pybind11Extension("jagger", ["python-binding-jagger.cc"],
+    Pybind11Extension("jagger_ext", ["jagger/python-binding-jagger.cc"],
       include_dirs=['.'],
       extra_compile_args=jagger_compile_args,
     ),
@@ -15,7 +15,12 @@ ext_modules = [
 
 setup(
     name="jagger-python",
-    py_modules=['jagger'],
+    packages=['jagger'],
     ext_modules=ext_modules,
+    entry_points={
+        'console_scripts': [
+            "jagger=jagger.main:main"
+        ]
+    },
     license_files= ('LICENSE', 'jagger.BSD', 'jagger.GPL', 'jagger.LGPL'),
     install_requires=[])
