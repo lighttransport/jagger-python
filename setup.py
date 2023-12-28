@@ -7,7 +7,7 @@ jagger_compile_args=[
   ]
 
 ext_modules = [
-    Pybind11Extension("jagger", ["python-binding-jagger.cc", "jagger.cc"],
+    Pybind11Extension("jagger", ["python-binding-jagger.cc"],
       include_dirs=['.'],
       extra_compile_args=jagger_compile_args,
     ),

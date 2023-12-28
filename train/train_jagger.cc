@@ -17,12 +17,18 @@ struct triple {
 int main (int argc, char** argv) {
   std::string train, dict;
   { // options (minimal)
-    extern char *optarg;
-    extern int optind;
-    for (int opt = 0; (opt = getopt (argc, argv, "d:")) != -1; )
-      if (opt == 'd') dict  = optarg;
-    if (optind == argc) errx (1, " extract patterns for Jagger from dictionary and training data\nUsage: %s -d dict train > patterns\n\nOptions:\n -d dict\tdictionary csv", argv[0]);
-    train = argv[optind];
+    if (argc < 3) {
+      fprintf(stderr, "Usage: %s dict train\n", argv[0]);
+      exit(-1);
+    }
+    dict = argv[1];
+    train = argv[2];
+    //extern char *optarg;
+    //extern int optind;
+    //for (int opt = 0; (opt = getopt (argc, argv, "d:")) != -1; )
+    //  if (opt == 'd') dict  = optarg;
+    //if (optind == argc) errx (1, " extract patterns for Jagger from dictionary and training data\nUsage: %s -d dict train > patterns\n\nOptions:\n -d dict\tdictionary csv", argv[0]);
+    //train = argv[optind];
   }
   ccedar::da <char, int> chars;
   sbag_t fbag, pbag_;
@@ -51,7 +57,7 @@ int main (int argc, char** argv) {
     }
     fi2c.resize (fbag.size (), 0);
   }
-  std::fprintf (stderr, "done; %ld words, %ld features\n", si2fi2fi.size (), fbag.size ());
+  std::fprintf (stderr, "done; %zu words, %zu features\n", si2fi2fi.size (), fbag.size ());
   std::fprintf (stderr, "regarding num / alpha / kana as seed patterns...");
   for (int i (0), b (0); chars_[i]; ++i) // read seeds from num / alpha / kana
     for (const char *p = &chars_[i][0]; *p; p += b) {
@@ -100,7 +106,7 @@ int main (int argc, char** argv) {
       }
     }
   }
-  std::fprintf (stderr, "done; %ld pattern candidates\n", pbag_.size ());
+  std::fprintf (stderr, "done; %zu pattern candidates\n", pbag_.size ());
   std::map <int, std::pair <int, int> > pi2sf;
   ccedar::da <char, int> patterns;
   std::vector <std::pair <size_t, int> > counter;
@@ -151,7 +157,7 @@ int main (int argc, char** argv) {
       pi2sf.insert (std::make_pair (pi, std::make_pair (bytes, fi)));
       patterns.update (p.c_str (), p.size ()) = static_cast <int> (pi);
     }
-    std::fprintf (stderr, "done; %ld -> %ld patterns\n", pi2fi2sc.size (), pi2sf.size ());
+    std::fprintf (stderr, "done; %zu -> %zu patterns\n", pi2fi2sc.size (), pi2sf.size ());
   }
   { // output patterns from frequent one to rare one
     std::sort (counter.rbegin (), counter.rend ());
@@ -160,7 +166,7 @@ int main (int argc, char** argv) {
       const size_t pi (pis[-it->second].second), count (it->first), bytes (pi2sf[pi].first);
       const std::string &w (pbag_.to_s (pi)), &f (fbag.to_s (pi2sf[pi].second));
       const int ctype = bytes ? char_type (&w[0], &w[0] + bytes, chars) : 0;
-      std::fprintf (stdout, "%ld\t%s\t%s%ld\t%d\t%s\n", count, w.c_str (), w.find ("\t") == std::string::npos ? "\t" : "", bytes, ctype, f.c_str ());
+      std::fprintf (stdout, "%zu\t%s\t%s%zu\t%d\t%s\n", count, w.c_str (), w.find ("\t") == std::string::npos ? "\t" : "", bytes, ctype, f.c_str ());
     }
   }
 }
