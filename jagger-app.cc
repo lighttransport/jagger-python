@@ -1,10 +1,79 @@
 // Jagger -- deterministic pattern-based Japanese tagger
 //  $Id: jagger.cc 2031 2023-02-17 21:47:05Z ynaga $
 // Copyright (c) 2022 Naoki Yoshinaga <ynaga@iis.u-tokyo.ac.jp>
-#include <jagger.h>
+// Modification by Copyright 2023 - Present, Light Transport Entertainment Inc.
+#include "jagger.h"
 
 static const size_t MAX_KEY_BITS     = 14;
 static const size_t MAX_FEATURE_BITS = 7;
+
+#ifdef _WIN32
+static std::wstring UTF8ToWchar(const std::string &str) {
+  int wstr_size =
+      MultiByteToWideChar(CP_UTF8, 0, str.data(), int(str.size()), nullptr, 0);
+  std::wstring wstr(size_t(wstr_size), 0);
+  MultiByteToWideChar(CP_UTF8, 0, str.data(), int(str.size()), &wstr[0],
+                      int(wstr.size()));
+  return wstr;
+}
+
+static std::string WcharToUTF8(const std::wstring &wstr) {
+  int str_size = WideCharToMultiByte(CP_UTF8, 0, wstr.data(), int(wstr.size()),
+                                     nullptr, 0, nullptr, nullptr);
+  std::string str(size_t(str_size), 0);
+  WideCharToMultiByte(CP_UTF8, 0, wstr.data(), int(wstr.size()), &str[0],
+                      int(str.size()), nullptr, nullptr);
+  return str;
+}
+#endif
+
+
+static bool FileExists(const std::string &filepath) {
+
+  bool ret{false};
+#ifdef JAGGER_ANDROID_LOAD_FROM_ASSETS
+  if (asset_manager) {
+    AAsset *asset = AAssetManager_open(asset_manager, filepath.c_str(),
+                                       AASSET_MODE_STREAMING);
+    if (!asset) {
+      return false;
+    }
+    AAsset_close(asset);
+    ret = true;
+  } else {
+    return false;
+  }
+#else
+#ifdef _WIN32
+#if defined(_MSC_VER) || defined(__GLIBCXX__) || defined(_LIBCPP_VERSION)
+  FILE *fp = nullptr;
+  errno_t err = _wfopen_s(&fp, UTF8ToWchar(filepath).c_str(), L"rb");
+  if (err != 0) {
+    return false;
+  }
+#else
+  FILE *fp = nullptr;
+  errno_t err = fopen_s(&fp, filepath.c_str(), "rb");
+  if (err != 0) {
+    return false;
+  }
+#endif
+
+#else
+  FILE *fp = fopen(filepath.c_str(), "rb");
+#endif
+  if (fp) {
+    ret = true;
+    fclose(fp);
+  } else {
+    ret = false;
+  }
+#endif
+
+  return ret;
+}
+
+
 
 namespace ccedar {
   class da_ : public ccedar::da <int, int, MAX_KEY_BITS> {
@@ -64,17 +133,33 @@ namespace jagger {
     template <typename T>
     static inline void write_array (T& data, const std::string& fn) {
       FILE *fp = std::fopen (fn.c_str (), "wb");
-      if (! fp) errx (1, "no such file: %s", fn.c_str ());
+      if (! fp) my_errx (1, "no such file: %s", fn.c_str ());
       std::fwrite (&data[0], sizeof (typename T::value_type), data.size (), fp);
       std::fclose (fp);
     }
     void* read_array (const std::string& fn) {
       int fd = ::open (fn.c_str (), O_RDONLY);
-      if (fd == -1) errx (1, "no such file: %s", fn.c_str ());
+      if (fd == -1) my_errx (1, "no such file: %s", fn.c_str ());
       // get size and read;
       const size_t size = ::lseek (fd, 0, SEEK_END);
       ::lseek (fd, 0, SEEK_SET);
+#if defined(_WIN32)
+      HANDLE hFile = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
+      HANDLE hMapping = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+      if (hMapping == NULL) {
+        my_errx(1, "CreateFileMappingA failed for: %s", fn.c_str());
+      }
+      void *data = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
+      if (!data) {
+        my_errx(1, "MapViewOfFile failed for: %s", fn.c_str());
+      }
+      CloseHandle(hMapping);
+#else
       void *data = ::mmap (0, size, PROT_READ, MAP_SHARED, fd, 0);
+      if (!data) {
+        my_errx(1, "mmap failed for: %s", fn.c_str());
+      }
+#endif
       ::close (fd);
       mmaped.push_back (std::make_pair (data, size));
       return data;
@@ -83,12 +168,19 @@ namespace jagger {
     tagger () : da (), c2i (0), p2f (0), fs (0), mmaped () {}
     ~tagger () {
       for (size_t i = 0; i < mmaped.size (); ++i)
+#if defined(_WIN32)
+        if (!UnmapViewOfFile(mmaped[i].first)) {
+          fprintf(stderr, "jagger: warn: UnmapViewOfFile failed.");
+        }
+#else
         ::munmap (mmaped[i].first, mmaped[i].second);
+#endif
     }
     void read_model (const std::string& m) { // read patterns to memory
       const std::string da_fn (m + ".da"), c2i_fn (m + ".c2i"), p2f_fn (m + ".p2f"), fs_fn (m + ".fs");
-      struct stat st;
-      if (::stat (da_fn.c_str (), &st) != 0) { // compile
+      //struct stat st;
+      //if (::stat (da_fn.c_str (), &st) != 0) { // compile
+      if (!FileExists(da_fn)) {
         std::fprintf (stderr, "building DA trie from patterns..");
         std::vector <uint16_t> c2i_; // mapping from utf8, BOS, unk to char ID
         std::vector <uint64_t> p2f_; // mapping from pattern ID to feature str
@@ -101,8 +193,8 @@ namespace jagger {
         sbag_t fbag_ ((std::string (FEAT_UNK) + ",*,*,*\n").c_str ());
 #endif
         std::map <uint64_t, int> fs2pid;
-        fs2pid.insert (std::make_pair ((1ul << 32) | 2, fs2pid.size ()));
-        p2f_.push_back ((1ul << 32) | 2);
+        fs2pid.insert (std::make_pair ((1ull << 32) | 2, fs2pid.size ()));
+        p2f_.push_back ((1ull << 32) | 2);
         // count each character to obtain dense mapping
         std::vector <std::pair <size_t, int> > counter (CP_MAX + 3);
         for (int u = 0; u < counter.size (); ++u) // allow 43 bits for counting
@@ -257,6 +349,7 @@ namespace jagger {
 int main (int argc, char** argv) {
   std::string model (JAGGER_DEFAULT_MODEL "/patterns");
   bool tag (true), fbf (false);
+#if 0
   { // options (minimal)
     extern char *optarg;
     for (int opt = 0; (opt = getopt (argc, argv, "m:wfh")) != -1;)
@@ -265,9 +358,33 @@ int main (int argc, char** argv) {
         case 'w': tag = false; break;
         case 'f': fbf = true;  break;
         case 'h':
-          errx (1, "Pattern-based Jappanese Morphological Analyzer\nUsage: %s -m dir [-wf] < input\n\nOptions:\n -m dir\tpattern directory (default: " JAGGER_DEFAULT_MODEL ")\n -w\tperform only segmentation\n -f\tfull buffering (fast but not interactive)", argv[0]);
+          my_errx (1, "Pattern-based Jappanese Morphological Analyzer\nUsage: %s -m dir [-wf] < input\n\nOptions:\n -m dir\tpattern directory (default: " JAGGER_DEFAULT_MODEL ")\n -w\tperform only segmentation\n -f\tfull buffering (fast but not interactive)", argv[0]);
       }
   }
+#else
+  {
+    if ((argc < 2) || (std::string(argv[1]) == "-h")) {
+          my_errx (1, "Pattern-based Jappanese Morphological Analyzer\nUsage: %s -m dir [-wf] < input\n\nOptions:\n -m dir\tpattern directory (default: " JAGGER_DEFAULT_MODEL ")\n -w\tperform only segmentation\n -f\tfull buffering (fast but not interactive)", argv[0]);
+
+    }
+
+    for (size_t i = 1; i < argc; i++) {
+      std::string arg = argv[i];
+
+      if (arg == "-m") {
+        if ((i + 1) >= argc) {
+          my_errx(1, "%s: model filename is missing.\n", argv[0]);
+        }
+        model = argv[i+1];
+        i++;
+      } else if (arg == "-w") {
+        tag = false;
+      } else if (arg == "-f") {
+        fbf = true;
+      }
+    }
+  }
+#endif
   jagger::tagger jagger;
   jagger.read_model (model);
   switch ((fbf << 4) | tag) {
