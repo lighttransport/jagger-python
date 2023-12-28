@@ -15,6 +15,7 @@ ext_modules = [
 
 setup(
     name="jagger-python",
+    py_modules=['jagger'],
     ext_modules=ext_modules,
     license_files= ('LICENSE', 'jagger.BSD', 'jagger.GPL', 'jagger.LGPL'),
     install_requires=[])
