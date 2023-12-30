@@ -24,7 +24,8 @@ jobs:
         env:
             CIBW_ARCHS_MACOS: "x86_64 universal2 arm64"
             CIBW_ARCHS_WINDOWS: "AMD64 x86"
-            CIBW_ARCHS_LINUX: "auto aarch64"
+            # disable aarm64 build since its too slow to build(docker + qemu)
+            CIBW_ARCHS_LINUX: "x86_64 i686"
             CIBW_SKIP: pp*
 
       - uses: actions/upload-artifact@v3
