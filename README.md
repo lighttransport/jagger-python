@@ -10,6 +10,9 @@ $ python -m pip install jagger
 
 This does not install model files.
 
+You can download precompiled KWDLC model from https://github.com/lighttransport/jagger-python/releases/download/v0.1.0/model_kwdlc.tar.gz
+(Note that KWDLC has unclear license/TermOfUse. Use it at your own risk)
+
 ## Example
 
 ```py
