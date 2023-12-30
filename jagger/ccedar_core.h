@@ -121,9 +121,9 @@ namespace ccedar {
       _size = static_cast <int> (size_);
       return 0;
     }
-    void set_array (void* p, size_t size_ = 0) { // ad-hoc
+    void set_array (const void* p, size_t size_ = 0) { // ad-hoc
       clear (false);
-      _array = static_cast <node*> (p);
+      _array = const_cast<node *>(static_cast <const node*> (p));
       _size  = static_cast <int> (size_);
       _no_delete = true;
     }

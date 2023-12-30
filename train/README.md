@@ -2,23 +2,23 @@
 
 ## Requirements
 
-Unixish system.
-
-
+Unixish system or Windows.
 
 ## Train with KWDLC
+
+See Jagger site for details: https://www.tkl.iis.u-tokyo.ac.jp/~ynaga/jagger/index.en.html
 
 ```
 $ gawk '{ printf "%s", ($1 == "EOS") ? "\n" : $1 }' model/kwdlc/train.JAG > model/kwdlc/train
 $ gawk '{ printf "%s", ($1 == "EOS") ? "\n" : $1 }' model/kwdlc/dev.JAG > model/kwdlc/dev
 $ gawk '{ printf "%s", ($1 == "EOS") ? "\n" : $1 }' model/kwdlc/test.JAG > model/kwdlc/test
 
-# find /home/syoyo/work/japanese-llama-experiment/jagger/jagger-2023-02-18/mecab-jumandic-7.0-20130310 -name "*.csv" | sort | xargs cat > model/kwdlc/dict
-# ./build/train_jagger -d model/kwdlc/dict model/kwdlc/train.JAG > model/kwdlc/patterns
+$ find mecab-jumandic-7.0-20130310 -name "*.csv" | sort | xargs cat > model/kwdlc/dict
+# ./build/train_jagger model/kwdlc/dict model/kwdlc/train.JAG > model/kwdlc/patterns
 
 ```
 
-## Train with Vaporetto
+## Train with Vaporetto(W.I.P.)
 
 ```
 $ python -m pip install vaporetto

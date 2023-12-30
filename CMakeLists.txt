@@ -16,10 +16,10 @@ add_executable(${EXE_TARGET} cpp_cli/jagger-app.cc)
 
 target_include_directories(${EXE_TARGET} PRIVATE jagger)
 
-target_compile_definitions(${EXE_TARGET} PRIVATE "JAGGER_DEFAULT_MODEL=\"/usr/local/lib/jagger/model/kwdlc\"")
+#target_compile_definitions(${EXE_TARGET} PRIVATE "JAGGER_DEFAULT_MODEL=\"/usr/local/lib/jagger/model/kwdlc\"")
 
 #
-target_compile_definitions(${EXE_TARGET} PRIVATE "NUM_POS_FIELD=4")
+#target_compile_definitions(${EXE_TARGET} PRIVATE "NUM_POS_FIELD=4")
 #target_compile_definitions(${EXE_TARGET} PRIVATE "USE_JUMANDIC=1")
 
 # [VisualStudio]

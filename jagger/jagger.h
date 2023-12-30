@@ -3,6 +3,8 @@
 // Copyright (c) 2022 Naoki Yoshinaga <ynaga@iis.u-tokyo.ac.jp>
 #ifndef JAGGER_H
 #define JAGGER_H
+
+#if defined(JAGGER_USE_MMAP_IO)
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #ifndef NOMINMAX
@@ -17,6 +19,8 @@
 #include <unistd.h>
 //#include <err.h>
 #endif
+#endif
+
 #include <stdint.h>
 #include <fcntl.h>
 #include <cstdio>
