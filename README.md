@@ -99,7 +99,8 @@ $ LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) python FILE.py
 
 ## TODO
 
-- [ ] Provide a model file trained from Wikipedia
+- [ ] Provide a model file trained from Wikipedia, UniDic, etc(clearer & permissive licencing&TermOfUse).
+  - Use GiNZA for morphological analysis.
 
 ## License
 
