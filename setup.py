@@ -1,3 +1,5 @@
+import sys
+
 from setuptools import setup
 from pybind11.setup_helpers import Pybind11Extension
 
@@ -8,6 +10,13 @@ jagger_compile_args=[
   '-DJAGGER_DEFAULT_MODEL="/usr/local/lib/jagger/model/kwdlc"',
   '-DNUM_POS_FIELD=4',
   ]
+
+if sys.platform.startswith('win32'):
+  # Assume MSVC
+  pass
+else:
+  jagger_compile_args.append("-std=c++11")
+
 
 if dev_mode:
   jagger_compile_args.append('-O0')
