@@ -31,7 +31,7 @@ ext_modules = [
 ]
 
 setup(
-    name="jagger-python",
+    name="jagger",
     packages=['jagger'],
     ext_modules=ext_modules,
     long_description=open("./README.md", 'r', encoding='utf8').read(),
