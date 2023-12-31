@@ -32,23 +32,14 @@ print("EOL")
 
 """
 吾輩    名詞,普通名詞,*,*,吾輩,わがはい,代表表記:我が輩/わがはい カテゴリ:人
-
 は      助詞,副助詞,*,*,は,は,*
-
 猫      名詞,普通名詞,*,*,猫,ねこ,*
-
 である  判定詞,*,判定詞,デアル列基本形,だ,である,*
-
 。      特殊,句点,*,*,。,。,*
-
 名前    名詞,普通名詞,*,*,名前,なまえ,*
-
 は      助詞,副助詞,*,*,は,は,*
-
 まだ    副詞,*,*,*,まだ,まだ,*
-
 ない    形容詞,*,イ形容詞アウオ段,基本形,ない,ない,*
-
 。      特殊,句点,*,*,。,。,*
 """
 
@@ -65,6 +56,32 @@ print("EOL")
 
 `tokenize_batch` tokenizes multiple lines(delimited by newline('\n', '\r', or '\r\n')) at once.
 Splitting lines is done in C++ side.
+
+```py
+import jagger
+
+model_path = "model/kwdlc/patterns"
+
+tokenizer = jagger.Jagger()
+tokenizer.load_model(model_path)
+
+text = """
+吾輩は猫である。
+名前はまだない。
+明日の天気は晴れです。
+"""
+
+# optional: set C++ threads(CPU cores) to use
+# default: Use all CPU cores.
+# tokenizer.set_threads(4)
+
+toks_list = tokenizer.tokenize_batch(text)
+
+for toks in toks_list:
+    for tok in toks:
+        print(tok.surface(), tok.feature())
+
+```
 
 ## Train a model.
 
@@ -101,7 +118,7 @@ $ LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) python FILE.py
 
 - [ ] Provide a model file trained from Wikipedia, UniDic, etc(clearer & permissive licencing&TermOfUse).
   - Use GiNZA for morphological analysis.
-- [ ] Split feature vector(CSV) considering quote char when extracting tags.
+- [x] Split feature vector(CSV) considering quote char when extracting tags.
   - e.g. 'a,b,"c,d",e' => ["a", "b", "c,d", "e"]
 
 ## License
