@@ -12,6 +12,7 @@ line-length = 140
 [project]
 name = "jagger"
 version = "0.1.1"
+readmed = "README.md"
 
 
 [project.scripts]
