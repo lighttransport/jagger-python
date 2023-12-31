@@ -4,18 +4,8 @@ import os
 import sys
 from pathlib import Path
 
-#
-# Assume default model file is placed at the location of this file(jagger/__init__.py)
-#
-default_model_path = os.path.join(os.path.dirname(__file__), "kwdlc/pattern")
-
 class Jagger:
-    def __init__(self, dict_path: Path = default_model_path):
-        self.model_da = dict_path + ".da"
-        self.model_c2i = dict_path + ".c2i"
-        self.model_p2f = dict_path + ".p2f"
-        self.model_fs = dict_path + ".fs"
-        print(self.model_da)
+    def __init__(self):
 
         self._tagger = JaggerExt()
 
@@ -27,5 +17,8 @@ class Jagger:
 
     def tokenize_batch(self, s: str):
         return self._tagger.tokenize_batch(s)
+
+    def set_threads(self, n: int):
+        return self._tagger.set_threads(n)
 
 

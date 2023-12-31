@@ -589,6 +589,14 @@ inline std::string ltrim(const std::string &s)
   return (start == std::string::npos) ? "" : s.substr(start);
 }
 
+inline std::string rtrim(const std::string &s)
+{
+  const std::string kWhitespace = " \n\r\t\f\v";
+
+  size_t end = s.find_last_not_of(kWhitespace);
+  return (end == std::string::npos) ? "" : s.substr(0, end + 1);
+}
+
 inline std::vector<std::string> split(
     const std::string &str, const std::string &sep,
     const uint32_t kMaxItems = (std::numeric_limits<int32_t>::max)() / 100) {
@@ -607,6 +615,66 @@ inline std::vector<std::string> split(
   }
 
   return result;
+}
+
+// Support quoted string'\"' (do not consider `delimiter` character in quoted string)
+// delimiter must be a ASCII char.
+// quote_char must be a single UTF-8 char.
+inline std::vector<std::string> parse_feature(const char *p, const size_t len, const char delimiter = ',', const char *quote_char = "\"")
+{
+  std::vector<std::string> tokens;
+
+  if (len == 0) {
+    return tokens;
+  }
+
+  size_t quote_size = u8_len(quote_char);
+
+  bool in_quoted_string = false;
+  size_t s_start = 0;
+
+  const char *curr_p = p;
+
+  for (size_t i = 0; i < len; i += u8_len(curr_p)) {
+
+    curr_p = &p[i];
+
+    if (is_line_ending(p, i, len - 1)) {
+      break;
+    }
+
+    if ((i + quote_size) < len) {
+      if (memcmp(curr_p, quote_char, quote_size) == 0) {
+        in_quoted_string = !in_quoted_string;
+        continue;
+      }
+    }
+
+    if (!in_quoted_string && (p[i] == delimiter)) {
+      //std::cout << "s_start = " << s_start << ", (i-1) = " << i-1 << "\n";
+      //std::cout << "p[i] = " << p[i] << "\n";
+      if (s_start < i) {
+        std::string tok(p + s_start, i - s_start);
+
+        tokens.push_back(tok);
+      } else {
+        // Add empty string
+        tokens.push_back(std::string());
+      }
+
+      s_start = i + 1; // next to delimiter char
+    }
+  }
+
+  // the remainder
+  //std::cout << "remain: s_start = " << s_start << ", len - 1 = " << len-1 << "\n";
+
+  if (s_start <= (len - 1)) {
+    std::string tok(p + s_start, len - s_start);
+    tokens.push_back(tok);
+  }
+
+  return tokens;
 }
 
 } // namespace
@@ -629,14 +697,22 @@ class PyToken {
   // NOTE: feature string contains leading whitespaces.
   std::string &get_feature() { return _feature; }
 
+  void set_quote_char(const std::string &quote_char) {
+    _quote_char = quote_char;
+  }
+
   uint32_t n_tags() const {
     if (_feature.empty()) {
       return 0;
     }
 
     // cache result.
-    // remove leading whitespaces.
-    _tags = split(ltrim(_feature), ",");
+    if (_tags.empty()) {
+      // remove leading whitespaces.
+      std::string trimmed_string = ltrim(_feature);
+
+      _tags = parse_feature(trimmed_string.data(), trimmed_string.size(), ',', _quote_char.c_str());
+    }
 
     return _tags.size();
   }
@@ -655,6 +731,7 @@ class PyToken {
   // TODO: Use string_view when compiled with C++17
   std::string _feature;
   mutable std::vector<std::string> _tags;
+  std::string _quote_char = "\"";
 };
 
 class tagger {
@@ -776,7 +853,7 @@ class tagger {
     // struct stat st;
     // if (::stat (da_fn.c_str (), &st) != 0) { // compile
     if (!FileExists(da_fn)) {
-      std::fprintf(stderr, "building DA trie from patterns..");
+      py::print("building DA trie from patterns..");
       std::vector<uint16_t> c2i_;  // mapping from utf8, BOS, unk to char ID
       std::vector<uint64_t> p2f_;  // mapping from pattern ID to feature str
       std::vector<char> fs_;       // feature strings
@@ -1027,8 +1104,10 @@ class tagger {
                 write_string(
                     _ptr, &fs[(offsets >> 34)],
                     (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff);
-                toks.back().get_feature() = std::string(&fs[(offsets >> 34)],
-                             (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff);
+
+                // strip '\n'
+                toks.back().get_feature() = rtrim(std::string(&fs[(offsets >> 34)],
+                             (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff));
               }
               concat = false;
             } else {
@@ -1062,8 +1141,8 @@ class tagger {
             write_string(
                 _ptr, &fs[(offsets >> 34)],
                 (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff);
-            toks.back().get_feature() = std::string(&fs[(offsets >> 34)],
-                         (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff);
+            toks.back().get_feature() = rtrim(std::string(&fs[(offsets >> 34)],
+                         (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff));
           }
         }
       write_string(_ptr, POS_TAGGING ? "EOS\n" : "\n", POS_TAGGING ? 4 : 1);
@@ -1085,7 +1164,7 @@ class tagger {
       return toks;
     }
 
-    toks = std::move(tokenize_line(&str[0], str.size()));
+    toks = tokenize_line(&str[0], str.size());
 
     return toks;
   }
@@ -1115,13 +1194,17 @@ class PyJagger {
     if (_tagger->read_model(model_path)) {
       _model_loaded = true;
       _model_path = model_path;
-      py::print("Model loaded:", model_path);
+      //py::print("Model loaded:", model_path);
     } else {
       _model_loaded = false;
       py::print("Model load failed:", model_path);
     }
 
     return _model_loaded;
+  }
+
+  void set_threads(uint32_t nthreads) {
+    _nthreads = nthreads;
   }
 
   ///
@@ -1142,11 +1225,10 @@ class PyJagger {
   /// @param[in] threads Optional. Control the number of C++11 threads(CPU
   /// cores) to use.
   ///
-  std::vector<std::vector<jagger::PyToken>> tokenize_batch(const std::string &src,
-                                                   uint32_t nthreads = 0) const;
+  std::vector<std::vector<jagger::PyToken>> tokenize_batch(const std::string &src) const;
 
  private:
-  uint32_t _threads{0};  // 0 = use all cores
+  uint32_t _nthreads{0};  // 0 = use all cores
   std::string _model_path;
   jagger::tagger *_tagger{nullptr};
   bool _model_loaded{false};
@@ -1169,8 +1251,7 @@ std::vector<jagger::PyToken> PyJagger::tokenize(const std::string &src) const {
   return dst;
 }
 
-std::vector<std::vector<jagger::PyToken>> PyJagger::tokenize_batch(
-    const std::string &src, uint32_t nthreads) const {
+std::vector<std::vector<jagger::PyToken>> PyJagger::tokenize_batch(const std::string &src) const {
 
 
   std::vector<std::vector<jagger::PyToken>> dst;
@@ -1184,19 +1265,47 @@ std::vector<std::vector<jagger::PyToken>> PyJagger::tokenize_batch(
     return dst;
   }
 
-  LineInfoVector line_infos = split_lines(src, nthreads);
+  uint32_t num_threads = (_nthreads == 0)
+                             ? uint32_t(std::thread::hardware_concurrency())
+                             : _nthreads;
+  num_threads = (std::max)(
+      1u, (std::min)(static_cast<uint32_t>(num_threads), kMaxThreads));
 
+
+  // result = [thread][lines]
+  LineInfoVector line_infos = split_lines(src, num_threads);
+
+  // concat LineInfos
+  std::vector<LineInfo> lines;
+  for (size_t i = 0; i < line_infos->size(); i++) {
+    lines.insert(lines.end(), line_infos[i].begin(), line_infos[i].end());
+  }
+
+  size_t num_lines = lines.size();
+
+  dst.resize(num_lines);
+
+  std::vector<std::thread> workers;
+  std::atomic<size_t> count{0};
   const char *addr = src.data();
 
-  for (size_t i = 0; i < line_infos->size(); i++) {
-    const std::vector<LineInfo> &lines = line_infos[i];
+  for (uint32_t t = 0; t < num_threads; t++) {
+    workers.emplace_back(std::thread([&]() {
 
-    std::vector<jagger::PyToken> toks;
-    for (size_t j = 0; j < lines.size(); j++) {
-      toks = _tagger->tokenize_line(addr + lines[j].pos, lines[j].len);
+      size_t k = 0;
+      while ((k = count++) < num_lines) {
 
-      dst.emplace_back(std::move(toks));
-    }
+        std::vector<jagger::PyToken> toks;
+        toks = _tagger->tokenize_line(addr + lines[k].pos, lines[k].len);
+
+        dst[k] = std::move(toks);
+
+      }
+    }));
+  }
+
+  for (auto &worker : workers) {
+    worker.join();
   }
 
   return dst;
@@ -1214,7 +1323,8 @@ PYBIND11_MODULE(jagger_ext, m) {
       .def(py::init<std::string>())
       .def("load_model", &pyjagger::PyJagger::load_model)
       .def("tokenize", &pyjagger::PyJagger::tokenize)
-      .def("tokenize_batch", &pyjagger::PyJagger::tokenize_batch);
+      .def("tokenize_batch", &pyjagger::PyJagger::tokenize_batch)
+      .def("set_threads", &pyjagger::PyJagger::set_threads);
 
   py::class_<jagger::PyToken>(m, "Token")
       .def(py::init<>())
@@ -1222,6 +1332,7 @@ PYBIND11_MODULE(jagger_ext, m) {
       .def("feature", &jagger::PyToken::feature)
       .def("n_tags", &jagger::PyToken::n_tags)
       .def("tag", &jagger::PyToken::tag)
+      .def("set_quote_char", &jagger::PyToken::set_quote_char)
       ;
 
 }
