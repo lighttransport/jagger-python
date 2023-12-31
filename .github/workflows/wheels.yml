@@ -26,7 +26,8 @@ jobs:
             CIBW_ARCHS_WINDOWS: "AMD64 x86"
             # disable aarm64 build since its too slow to build(docker + qemu)
             CIBW_ARCHS_LINUX: "x86_64 i686"
-            CIBW_SKIP: pp*
+            # it looks cibuildwheel fails to add version string to wheel file for python 3.6, so skip it
+            CIBW_SKIP: pp* cp36-*
 
       - uses: actions/upload-artifact@v3
         with:
