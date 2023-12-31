@@ -111,4 +111,5 @@ Jagger and `ccedar_core.h` is licensed under GPLv2/LGPLv2.1/BSD triple licenses.
 ### Third party licences
 
 * stack_container.h: BSD like license.
+* nanocsv.h MIT license.
 
