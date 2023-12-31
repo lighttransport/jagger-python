@@ -34,6 +34,8 @@ setup(
     name="jagger-python",
     packages=['jagger'],
     ext_modules=ext_modules,
+    long_description=open("./README.md", 'r').read(),
+    long_description_content_type='text/markdown',
     # NOTE: entry_points are set in pyproject.toml
     #entry_points={
     #    'console_scripts': [

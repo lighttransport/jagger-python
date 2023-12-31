@@ -12,7 +12,7 @@ line-length = 140
 [project]
 name = "jagger"
 version = "0.1.1"
-readme = "README.md"
+readme = {file = "README.md", content-type = "text/markdown"}
 
 
 [project.scripts]
