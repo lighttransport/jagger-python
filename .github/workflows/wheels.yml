@@ -74,8 +74,13 @@ jobs:
   upload_all:
     needs: [build_wheels, build_wheels, make_sdist]
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+    # Use `environment` instead.
     # # upload to PyPI on every tag starting with 'v'
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     # alternatively, to publish when a GitHub Release is created, use the following rule:
     # if: github.event_name == 'push' && github.event.action == 'published'
     steps:
@@ -86,7 +91,11 @@ jobs:
 
     - uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        password: ${{ secrets.PYPI_API_TOKEN }}
-        # Avoid race condition by using multiple CIs
+        # Use Trusted Publisher feature:
+        # https://docs.pypi.org/trusted-publishers/
+        #  so no use of PYPI_API_TOKEN
+        #password: ${{ secrets.PYPI_API_TOKEN }}
+        #
+        # Avoid race condition when using multiple CIs
         skip-existing: true
         verbose: true
