@@ -13,7 +13,10 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true  # Optional, use if you use setuptools_scm
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
@@ -29,7 +32,7 @@ jobs:
             # it looks cibuildwheel fails to add version string to wheel file for python 3.6, so skip it
             CIBW_SKIP: pp*
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
 
@@ -40,7 +43,10 @@ jobs:
     name: Build ARM64 wheels on Windows.
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true  # Optional, use if you use setuptools_scm
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
@@ -52,7 +58,7 @@ jobs:
             CIBW_ARCHS_WINDOWS: "ARM64"
             CIBW_SKIP: pp*
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
 
@@ -60,15 +66,15 @@ jobs:
     name: Make SDist
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Optional, use if you use setuptools_scm
-        submodules: true  # Optional, use if you have submodules
+        fetch-tags: true  # Optional, use if you use setuptools_scm
 
     - name: Build SDist
       run: pipx run build --sdist
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: dist/*.tar.gz
 
@@ -88,7 +94,7 @@ jobs:
     # alternatively, to publish when a GitHub Release is created, use the following rule:
     # if: github.event_name == 'push' && github.event.action == 'published'
     steps:
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: artifact
         path: dist
