@@ -1,5 +1,10 @@
 # jagger-python
 
+<div align="center">
+  <img src="jagger.png" width="512"/>
+</div>
+
+
 Python binding for Jagger(C++ implementation of Pattern-based Japanese Morphological Analyzer) : https://www.tkl.iis.u-tokyo.ac.jp/~ynaga/jagger/index.en.html
 
 ## Install
