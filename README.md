@@ -1,7 +1,7 @@
 # jagger-python
 
 <div align="center">
-  <img src="jagger.png" width="512"/>
+  <img src="jagger.png" width="300"/>
 </div>
 
 
