@@ -2,6 +2,7 @@
 requires = [
     "setuptools>=42",
     "wheel",
+    "setuptools_scm>=8,
     "pybind11>=2.10.0",
 ]
 build-backend = "setuptools.build_meta"
@@ -11,7 +12,11 @@ line-length = 140
 
 [project]
 name = "jagger"
-version = "0.1.10"
+
+#  Use setuptools_scm https://github.com/pypa/setuptools_scm to set version.
+dynamic = ["version"]
+# version = "0.1.10"
+
 readme = {file = "README.md", content-type = "text/markdown"}
 
 
