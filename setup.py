@@ -33,6 +33,7 @@ ext_modules = [
 setup(
     name="jagger",
     packages=['jagger'],
+    version="v0.1.14",
     ext_modules=ext_modules,
     long_description=open("./README.md", 'r', encoding='utf8').read(),
     long_description_content_type='text/markdown',

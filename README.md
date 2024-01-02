@@ -118,6 +118,12 @@ or
 $ LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) python FILE.py
 ```
 
+### Releasing
+
+* bump version in `setup.py`
+* tag it: `git tag vX.Y.`
+* push tag: `git push --tags`
+
 
 ## TODO
 
