@@ -24,6 +24,10 @@ Run `prepare_dataset.py`
 
 ## Benchmark in Jagger
 
+Download and extract dictionary. https://github.com/lighttransport/jagger-python/releases/download/v0.1.0/model_kwdlc.tar.gz
+
+Then,
+
 ```
 $ python run-jagger.py
 ```
