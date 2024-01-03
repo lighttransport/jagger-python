@@ -131,6 +131,10 @@ $ LD_PRELOAD=$(clang -print-file-name=libclang_rt.asan-x86_64.so) python FILE.py
   - Use GiNZA for morphological analysis.
 - [x] Split feature vector(CSV) considering quote char when extracting tags.
   - e.g. 'a,b,"c,d",e' => ["a", "b", "c,d", "e"]
+- [ ] Optimize C++ <-> Python interface
+  - [ ] string_view(or read-only string literal) for tag str.
+  - [ ] pickle support(for exchanging Python object when using multiprocessing)
+    - https://pybind11.readthedocs.io/en/latest/advanced/classes.html#pickling-support
 
 ## License
 
