@@ -1,6 +1,11 @@
 [build-system]
 requires = [
-    "setuptools>=42",
+    # NOTE: setuptools_scm>=8 is not supported in py3.6 cibuildwheel env.
+    # so use older setuptools_scm for a while
+    #"setuptools>=64",
+    #"setuptools_scm>=8",
+    "setuptools>=45",
+    "setuptools_scm[toml]>=6.2",
     "wheel",
     "pybind11>=2.10.0",
 ]
@@ -12,7 +17,7 @@ line-length = 140
 [project]
 name = "jagger"
 
-# look into version in setuo.py
+# Use setuptools_scm
 dynamic = ["version"]
 
 readme = {file = "README.md", content-type = "text/markdown"}
@@ -20,3 +25,10 @@ readme = {file = "README.md", content-type = "text/markdown"}
 
 [project.scripts]
 jagger = "jagger:main"
+
+[tool.setuptools_scm]
+# setuptools_scm>=8
+#version_file = "jagger/_version.py"
+
+# setuptools_scm<8
+write_to = "jagger/_version.py"
