@@ -11,3 +11,4 @@ include jagger/jagger.h
 include jagger/python-binding-jagger.cc
 include jagger/__init__.py
 include jagger/main.py
+include jagger/_version.py
