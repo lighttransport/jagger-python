@@ -1,4 +1,12 @@
-from jagger_ext import *
+#from jagger_ext import *
+
+# load setptools_scm generated _version.py
+try:
+    from ._version import version, __version__
+    from ._version import version_tuple
+except:
+    __version__ = version = '0.0.0.dev'
+    __version_tuple__ = version_tuple = (0, 0, 0, 'dev', 'git')
 
 import os
 import sys
