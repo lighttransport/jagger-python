@@ -14,11 +14,14 @@
 #include <windows.h>
 #endif
 
+#if !defined(_WIN32)
+#include <unistd.h>
+#endif
+
 #if defined(JAGGER_USE_MMAP_IO)
 #if !defined(_WIN32)
 #include <sys/stat.h>
 #include <sys/mman.h>
-#include <unistd.h>
 //#include <err.h>
 #endif
 #endif
@@ -41,6 +44,17 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#ifndef JAGGER_DEFAULT_MODEL
+#define JAGGER_DEFAULT_MODEL "model/kwdlc"
+#endif
+
+#ifndef NUM_POS_FIELD
+// mecab style
+#define NUM_POS_FIELD 4
+#endif
+
+
 
 static void my_errx(int retcode, const char *fmt, const char *s)
 {

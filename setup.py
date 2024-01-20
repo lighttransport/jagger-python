@@ -7,8 +7,6 @@ from pybind11.setup_helpers import Pybind11Extension
 dev_mode = False
 
 jagger_compile_args=[
-  '-DJAGGER_DEFAULT_MODEL="/usr/local/lib/jagger/model/kwdlc"',
-  '-DNUM_POS_FIELD=4',
   ]
 
 if sys.platform.startswith('win32'):
@@ -33,7 +31,8 @@ ext_modules = [
 setup(
     name="jagger",
     packages=['jagger'],
-    version="v0.1.17",
+    # version is now set by setuptools_scm
+    #version="v0.1.17",
     ext_modules=ext_modules,
     long_description=open("./README.md", 'r', encoding='utf8').read(),
     long_description_content_type='text/markdown',

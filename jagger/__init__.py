@@ -1,4 +1,4 @@
-#from jagger_ext import *
+from jagger_ext import *
 
 # load setptools_scm generated _version.py
 try:
@@ -24,6 +24,11 @@ class Jagger:
         return self._tagger.tokenize(s)
 
     def tokenize_batch(self, s: str):
+        if isinstance(s, list):
+            s = '\n'.join(s)
+            # strip redundant '\n'(if input is a list of text which endswith '\n'
+            s.replace('\n\n', '\n')
+
         return self._tagger.tokenize_batch(s)
 
     def set_threads(self, n: int):

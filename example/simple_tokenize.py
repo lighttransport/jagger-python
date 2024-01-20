@@ -9,13 +9,13 @@ text = "吾輩は猫である。名前はまだない。"
 toks = tokenizer.tokenize(text)
 
 for tok in toks:
-    print(tok.surface(), tok.feature())
+    # print surface + TAB + feature
+    print(tok)
 
-    # NOTE: surface() string contains trailing whitespaces.
-    # Use split() or rsplit() to strip whitespaces if you dont want it.
-    # print("surface", tok.surface().rsplit()[0])
+    # or you can print surface and feature independently.
+    #print(tok.surface(), tok.feature())
 
-print("EOL")
+print("EOS")
 
 
 for tok in toks:
@@ -33,4 +33,4 @@ for tok in toks:
     for i in range(tok.n_tags()):
         print("  tag[{}] = {}".format(i, tok.tag(i)))
 
-print("EOL")
+print("EOS")

@@ -725,6 +725,10 @@ class PyToken {
     return std::string();
   }
 
+  const std::string str() {
+    return _surface + "\t" + _feature;
+  }
+
  private:
   std::string _surface;
 
@@ -1096,8 +1100,8 @@ class tagger {
                              (offsets >> MAX_KEY_BITS) & 0x7f);
                 write_string(_ptr, ",*,*,*\n", 7);
 
-                toks.back().get_feature() = std::string(&fs[(offsets >> 34)],
-                             (offsets >> MAX_KEY_BITS) & 0x7f);
+                toks.back().get_feature() = ltrim(std::string(&fs[(offsets >> 34)],
+                             (offsets >> MAX_KEY_BITS) & 0x7f));
 
                 toks.back().get_feature() += ",*,*,*";
               } else {
@@ -1105,9 +1109,9 @@ class tagger {
                     _ptr, &fs[(offsets >> 34)],
                     (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff);
 
-                // strip '\n'
-                toks.back().get_feature() = rtrim(std::string(&fs[(offsets >> 34)],
-                             (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff));
+                // feature contains leading '\t' and ending '\n'. we remove it.
+                toks.back().get_feature() = ltrim(rtrim(std::string(&fs[(offsets >> 34)],
+                             (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff)));
               }
               concat = false;
             } else {
@@ -1122,9 +1126,15 @@ class tagger {
 
         // surface
         write_string(_ptr, p, static_cast<size_t>(bytes));
-        PyToken tok;
-        tok.get_surface() = std::string(p, static_cast<size_t>(bytes));
-        toks.push_back(tok);
+
+        if (concat) {
+          // concat word to the surface of last token
+          toks.back().get_surface() += std::string(p, static_cast<size_t>(bytes));
+        } else {
+          PyToken tok;
+          tok.get_surface() = std::string(p, static_cast<size_t>(bytes));
+          toks.push_back(tok);
+        }
       }
       if (!bos)  // output fs of last token
         if (POS_TAGGING) {
@@ -1133,16 +1143,17 @@ class tagger {
                          (offsets >> MAX_KEY_BITS) & 0x7f);
             write_string(_ptr, ",*,*,*\n", 7);
 
-            toks.back().get_feature() = std::string(&fs[(offsets >> 34)],
-                         (offsets >> MAX_KEY_BITS) & 0x7f);
+            toks.back().get_feature() = ltrim(std::string(&fs[(offsets >> 34)],
+                         (offsets >> MAX_KEY_BITS) & 0x7f));
 
             toks.back().get_feature() += ",*,*,*";
           } else {
             write_string(
                 _ptr, &fs[(offsets >> 34)],
                 (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff);
-            toks.back().get_feature() = rtrim(std::string(&fs[(offsets >> 34)],
-                         (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff));
+            // feature contains leading '\t' and ending '\n'. we remove it.
+            toks.back().get_feature() = ltrim(rtrim(std::string(&fs[(offsets >> 34)],
+                         (offsets >> (MAX_KEY_BITS + MAX_FEATURE_BITS)) & 0x3ff)));
           }
         }
       write_string(_ptr, POS_TAGGING ? "EOS\n" : "\n", POS_TAGGING ? 4 : 1);
@@ -1333,6 +1344,7 @@ PYBIND11_MODULE(jagger_ext, m) {
       .def("n_tags", &jagger::PyToken::n_tags)
       .def("tag", &jagger::PyToken::tag)
       .def("set_quote_char", &jagger::PyToken::set_quote_char)
+      .def("__repr__", &jagger::PyToken::str)
       ;
 
 }
