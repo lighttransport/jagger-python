@@ -33,7 +33,7 @@ toks = tokenizer.tokenize(text)
 
 for tok in toks:
     print(tok.surface(), tok.feature())
-print("EOL")
+print("EOS")
 
 """
 吾輩    名詞,普通名詞,*,*,吾輩,わがはい,代表表記:我が輩/わがはい カテゴリ:人
@@ -46,6 +46,7 @@ print("EOL")
 まだ    副詞,*,*,*,まだ,まだ,*
 ない    形容詞,*,イ形容詞アウオ段,基本形,ない,ない,*
 。      特殊,句点,*,*,。,。,*
+EOS
 """
 
 # print tags
@@ -54,7 +55,7 @@ for tok in toks:
     print(tok.surface())
     for i in range(tok.n_tags()):
         print("  tag[{}] = {}".format(i, tok.tag(i)))
-print("EOL")
+print("EOS")
 ```
 
 ## Batch processing(experimental)
