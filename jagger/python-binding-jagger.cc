@@ -748,7 +748,7 @@ class tagger {
 #if defined(JAGGER_USE_MMAP_IO)
   std::vector<std::pair<void *, size_t>> mmaped;
 #else
-  std::vector<uint8_t> buffers[4];  // 4 dicts
+  std::vector<uint8_t> buffers[4];  // up to 4 dicts
 #endif
 
   static inline void write_string(char *&p, const char *s, size_t len = 0) {
@@ -783,7 +783,7 @@ class tagger {
     std::fwrite(&data[0], sizeof(typename T::value_type), data.size(), fp);
     std::fclose(fp);
   }
-  const void *read_array(const std::string &fn, size_t idx) {
+  const void *read_array(const std::string &fn, size_t idx, size_t &len) {
 #if defined(JAGGER_USE_MMAP_IO)
     (void)idx;
     int fd = ::open(fn.c_str(), O_RDONLY);
@@ -812,6 +812,7 @@ class tagger {
     ::close(fd);
 #endif
     mmaped.push_back(std::make_pair(data, size));
+    len = size;
     return data;
 #else
     std::vector<uint8_t> data;
@@ -822,6 +823,7 @@ class tagger {
     }
     buffers[idx] = data;
 
+    len = data.size();
     // Assume pointer address does not change.
     return reinterpret_cast<const void *>(buffers[idx].data());
 #endif
@@ -960,23 +962,25 @@ class tagger {
       da.save(da_fn.c_str());
       py::print("Model conversion done.\n");
     }
-    const void *da_buf = read_array(da_fn, 0);
+    size_t buf_size{0};
+    const void *da_buf = read_array(da_fn, 0, buf_size);
     if (!da_buf) {
       py::print("da_fn not found:", da_fn);
       return false;
     }
-    da.set_array(da_buf);
-    c2i = static_cast<const uint16_t *>(read_array(c2i_fn, 1));
+    //da.set_array(da_buf, buf_size / sizeof();
+    da.set_array(da_buf, buf_size);
+    c2i = static_cast<const uint16_t *>(read_array(c2i_fn, 1, buf_size));
     if (!c2i) {
       py::print("c2i_fn not found:", c2i_fn);
       return false;
     }
-    p2f = static_cast<const uint64_t *>(read_array(p2f_fn, 2));
+    p2f = static_cast<const uint64_t *>(read_array(p2f_fn, 2, buf_size));
     if (!p2f) {
       py::print("p2f_fn not found:", p2f_fn);
       return false;
     }
-    fs = static_cast<const char *>(read_array(fs_fn, 3));
+    fs = static_cast<const char *>(read_array(fs_fn, 3, buf_size));
     if (!fs) {
       py::print("fs_fn not found:", fs_fn);
       return false;

@@ -137,7 +137,7 @@ namespace jagger {
       std::fwrite (&data[0], sizeof (typename T::value_type), data.size (), fp);
       std::fclose (fp);
     }
-    void* read_array (const std::string& fn) {
+    void* read_array (const std::string& fn, size_t &bufsize) {
       int fd = ::open (fn.c_str (), O_RDONLY);
       if (fd == -1) my_errx (1, "no such file: %s", fn.c_str ());
       // get size and read;
@@ -162,6 +162,7 @@ namespace jagger {
 #endif
       ::close (fd);
       mmaped.push_back (std::make_pair (data, size));
+      bufsize = size;
       return data;
     }
   public:
@@ -276,10 +277,12 @@ namespace jagger {
         da.save (da_fn.c_str ());
         std::fprintf (stderr, "done.\n");
       }
-      da.set_array (read_array (da_fn));
-      c2i = static_cast <uint16_t*> (read_array (c2i_fn));
-      p2f = static_cast <uint64_t*> (read_array (p2f_fn));
-      fs  = static_cast <char*> (read_array (fs_fn));
+      size_t bufsize;
+      const void *da_buf = read_array(da_fn, bufsize);
+      da.set_array (da_buf, bufsize);
+      c2i = static_cast <uint16_t*> (read_array (c2i_fn, bufsize));
+      p2f = static_cast <uint64_t*> (read_array (p2f_fn, bufsize));
+      fs  = static_cast <char*> (read_array (fs_fn, bufsize));
     }
     template <const int BUF_SIZE_, const bool POS_TAGGING>
     void run () const {
