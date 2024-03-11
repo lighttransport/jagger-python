@@ -37,6 +37,11 @@ for line in lines:
     assert classifier1 is not None
     assert classifier2 is not None
 
+    if ',' in surface:
+        assert '"' not in surface
+        
+        surface = '"' + surface + '"'
+
     feature_str = "{},*,*,*,顔文字,{},{},{},*,*,{},{},顔文字".format(surface, classifier0, classifier1, classifier2, surface, surface)
 
     print(feature_str)
