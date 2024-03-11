@@ -15,7 +15,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_executable(${EXE_TARGET} train_jagger.cc)
 
-target_include_directories(${EXE_TARGET} PRIVATE ..)
+target_include_directories(${EXE_TARGET} PRIVATE ../jagger)
 
 target_compile_definitions(${EXE_TARGET} PRIVATE "JAGGER_DEFAULT_MODEL=\"/usr/local/lib/jagger/model/kwdlc\"")
 
